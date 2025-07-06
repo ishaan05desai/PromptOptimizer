@@ -1,0 +1,50 @@
+{
+  "name": "ai-prompt-optimizer",
+  "version": "1.0.0",
+  "description": "Chrome extension that optimizes AI chatbot prompts using Gemini-2.0-Flash for improved clarity and efficiency",
+  "type": "module",
+  "main": "background.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write .",
+    "package": "zip -r ai-prompt-optimizer.zip . -x 'node_modules/*' '*.git*' 'dist/*' '*.log'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ai",
+    "prompt-optimization",
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "productivity"
+  ],
+  "author": "Ishaan Desai",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "prettier": "^3.1.1",
+    "vite": "^5.0.8"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ishaan05desai/PromptOptimizer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ishaan05desai/PromptOptimizer/issues"
+  },
+  "homepage": "https://github.com/ishaan05desai/PromptOptimizer#readme"
+} 
