@@ -108,3 +108,6 @@ web-ext-artifacts/
 # Temporary files
 tmp/
 temp/ 
+
+# Images
+*.png
