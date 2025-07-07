@@ -16,6 +16,17 @@ function isSupportedSite() {
 }
 
 /**
+ * Check if optimization is enabled
+ */
+function isOptimizationEnabled() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['optimizerEnabled'], (result) => {
+      resolve(result.optimizerEnabled !== false); // Default to true if not set
+    });
+  });
+}
+
+/**
  * Try to find the main prompt textbox on the page
  * Returns the element or null
  */
@@ -142,6 +153,10 @@ function setupPromptInterceptor(textbox, sendButton) {
   // Intercept Enter key
   textbox.addEventListener('keydown', async (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
+      // Check if optimization is enabled
+      const enabled = await isOptimizationEnabled();
+      if (!enabled) return; // Let the default behavior happen
+      
       event.preventDefault();
       const promptText = textbox.tagName === 'DIV' && textbox.isContentEditable
         ? textbox.innerText
@@ -169,6 +184,10 @@ function setupPromptInterceptor(textbox, sendButton) {
 
   // Intercept send button click
   sendButton.addEventListener('click', async (event) => {
+    // Check if optimization is enabled
+    const enabled = await isOptimizationEnabled();
+    if (!enabled) return; // Let the default behavior happen
+    
     // Only intercept if textbox has value
     const promptText = textbox.tagName === 'DIV' && textbox.isContentEditable
       ? textbox.innerText
