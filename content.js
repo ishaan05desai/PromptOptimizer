@@ -195,6 +195,10 @@ function setupPromptInterceptor(textbox, sendButton) {
             // --- START OF NEW LOGS ---
             console.log("Received response from background:", response);
             // --- END OF NEW LOGS ---
+            if (chrome.runtime.lastError) {
+              console.log("Context invalidated, likely due to extension reload.");
+              return;
+            }
             if (response && response.success) {
               replaceAndSend(textbox, sendButton, response.optimized_prompt);
             } else {
