@@ -1,5 +1,6 @@
 // popup.js - Vanilla JavaScript version of the popup UI
 // This replaces popup.jsx to work without build tools
+import './style.css';
 
 document.addEventListener('DOMContentLoaded', function() {
   // State variables
