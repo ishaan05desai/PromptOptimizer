@@ -78,10 +78,6 @@ function findSendButton() {
  * Poll or observe for textbox and send button
  * Calls callback(textbox, sendButton) when both are found
  */
-/**
- * Poll or observe for textbox and send button
- * Calls callback(textbox, sendButton) when both are found
- */
 function waitForInputElements(callback) {
   const anElement = () => {
     const textbox = findPromptTextbox();
@@ -128,20 +124,38 @@ function restoreTextbox(textbox) {
 /**
  * Replace textbox content with optimized prompt and trigger send
  */
-function replaceAndSend(textbox, sendButton, optimizedPrompt) {
+function replaceAndSend(textbox, _sendButton, optimizedPrompt) {
   // Set value/content
   if (textbox.tagName === 'DIV' && textbox.isContentEditable) {
     textbox.innerText = optimizedPrompt;
     // Dispatch input event for React/Vue/Angular
-    textbox.dispatchEvent(new Event('input', { bubbles: true }));
-    textbox.dispatchEvent(new Event('change', { bubbles: true }));
+    textbox.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    textbox.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
   } else {
     textbox.value = optimizedPrompt;
-    textbox.dispatchEvent(new Event('input', { bubbles: true }));
-    textbox.dispatchEvent(new Event('change', { bubbles: true }));
+    textbox.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    textbox.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
   }
-  // Click send button
-  sendButton.click();
+  
+  // Re-enable the textbox after filling it
+  textbox.disabled = false;
+  
+  // **THE FIX:** Wait for the browser to repaint the UI with the new prompt text
+  // before attempting to click the send button.
+  requestAnimationFrame(() => {
+    // A second frame wait is even more robust for complex web apps.
+    requestAnimationFrame(() => {
+      // Re-find the send button to get the freshest reference
+      const currentSendButton = findSendButton();
+      if (currentSendButton) {
+        currentSendButton.click();
+      } else {
+        console.error("AI Prompt Optimizer: Could not find the send button to click.");
+        restoreTextbox(textbox); // Restore original prompt if send fails
+        alert("AI Prompt Optimizer: Could not send the optimized prompt.");
+      }
+    });
+  });
 }
 
 /**
@@ -156,47 +170,38 @@ function setupPromptInterceptor(textbox, sendButton) {
 
   // Intercept Enter key
   textbox.addEventListener('keydown', async (event) => {
-    // --- START OF NEW LOGS ---
-    console.log("Key pressed:", event.key);
-    // --- END OF NEW LOGS ---
-
     if (event.key === 'Enter' && !event.shiftKey) {
-      // --- START OF NEW LOGS ---
-      console.log("Enter key intercepted without Shift.");
-      // --- END OF NEW LOGS ---
       event.preventDefault();
       event.stopImmediatePropagation();
       const enabled = await isOptimizationEnabled();
-      // --- START OF NEW LOGS ---
-      console.log("Is optimization enabled?", enabled);
-      // --- END OF NEW LOGS ---
 
-      if (!enabled) return;
-      
+      if (!enabled) {
+        // Find the form and submit it directly if optimization is disabled
+        const form = textbox.closest('form');
+        if (form) {
+            form.requestSubmit();
+        } else {
+            sendButton.click();
+        }
+        return;
+      }
       
       const promptText = textbox.tagName === 'DIV' && textbox.isContentEditable
         ? textbox.innerText
         : textbox.value;
       
-      // --- START OF NEW LOGS ---
-      console.log("Prompt text found:", promptText);
       if (!promptText.trim()) {
-        console.log("Prompt is empty, not sending.");
         return;
       }
-      console.log("Sending message to background script...");
-      // --- END OF NEW LOGS ---
 
       showOptimizingIndicator(textbox);
       try {
         chrome.runtime.sendMessage(
           { action: 'optimizePrompt', promptText },
           (response) => {
-            // --- START OF NEW LOGS ---
-            console.log("Received response from background:", response);
-            // --- END OF NEW LOGS ---
             if (chrome.runtime.lastError) {
               console.log("Context invalidated, likely due to extension reload.");
+              restoreTextbox(textbox);
               return;
             }
             if (response && response.success) {
@@ -214,13 +219,11 @@ function setupPromptInterceptor(textbox, sendButton) {
     }
   }, true);
 
-  // ... (no changes needed for the 'click' listener yet)
 }
 
 // Only run on supported sites
 if (isSupportedSite()) {
   waitForInputElements((textbox, sendButton) => {
-    console.log("Found elements, attempting to attach listeners:", { textbox, sendButton });
     setupPromptInterceptor(textbox, sendButton);
   });
-} 
+}
